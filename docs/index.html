@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voicebook – Text-to-Speech Audiobook Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #edf0f6;
+      margin: 0; padding: 0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 620px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 24px #0d167918;
+      padding: 2rem 2rem 2.5rem;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #21314a;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      color: #38466b;
+      margin-top: 2rem;
+    }
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 7px;
+      color: #233151;
+    }
+    textarea {
+      width: 100%;
+      min-height: 72px;
+      font-size: 1.1em;
+      border: 1px solid #c1c6d1;
+      border-radius: 8px;
+      padding: 1em;
+      resize: vertical;
+      margin-bottom: 1.5em;
+    }
+    select, input[type=number] {
+      width: 100%;
+      font-size: 1em;
+      padding: 0.5em;
+      border: 1px solid #c1c6d1;
+      border-radius: 7px;
+      margin-bottom: 1.5em;
+    }
+    .options-row {
+      display: flex;
+      gap: 18px;
+    }
+    .options-row > div {
+      flex: 1 1 0;
+    }
+    button {
+      background: #093ffb;
+      color: white;
+      border: none;
+      font-size: 1.13em;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 0.85em 1.8em;
+      box-shadow: 0 2px 8px #1647dd18;
+      cursor: pointer;
+      margin: 1.1em 0 0.7em;
+      transition: background 0.16s;
+    }
+    button:active, button:hover {
+      background: #0432cd;
+    }
+    .cost {
+      color: #0761a6;
+      background: #edf6ff;
+      border-radius: 6px;
+      padding: 0.42em 1em;
+      font-size: 1.04em;
+      display: inline-block;
+      margin-bottom: 1em;
+    }
+    .audio-player {
+      margin: 1.2em 0 0.6em;
+      width: 100%;
+      background: #f7faff;
+      border-radius: 10px;
+      padding: 0.85em;
+      text-align: center;
+    }
+    .instructions {
+      font-size: 0.98em;
+      margin-top: 2.3em;
+      color: #556;
+      background: #fafbfc;
+      padding: 1.3em;
+      border-radius: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2.8em;
+      color: #b0b6c9;
+      font-size: 0.91em;
+    }
+    @media (max-width: 670px) {
+      .container { padding: 1em 3vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📖 Voicebook</h1>
+    <div style="text-align:center;font-size:1.12em;color:#456">Text-to-Speech Audiobook Generator</div>
+
+    <form id="ttsForm" autocomplete="off" onsubmit="event.preventDefault(); convertTTS();">
+      <label for="text">Paste or type text:</label>
+      <textarea id="text" required placeholder="Enter text to convert to speech... (max 5,000 characters for demo)"></textarea>
+
+      <div class="options-row">
+        <div>
+          <label for="voice">Voice:</label>
+          <select id="voice">
+            <option value="nova" selected>Nova (friendly, conversational)</option>
+            <option value="alloy">Alloy (neutral, balanced)</option>
+            <option value="echo">Echo (clear, articulate)</option>
+            <option value="fable">Fable (warm, expressive)</option>
+            <option value="onyx">Onyx (deep, authoritative)</option>
+            <option value="shimmer">Shimmer (smooth, professional)</option>
+          </select>
+        </div>
+        <div>
+          <label for="quality">Quality:</label>
+          <select id="quality">
+            <option value="standard" selected>Standard</option>
+            <option value="hd">HD</option>
+          </select>
+        </div>
+        <div>
+          <label for="speed">Speed:</label>
+          <select id="speed">
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x (normal)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+            <option value="3">3x</option>
+            <option value="4">4x</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cost" id="costEstimate">Estimated cost: $0.00</div>
+      <button type="submit">Convert to Speech ▶️</button>
+    </form>
+
+    <div id="output">
+      <!-- Audio player and result shown here -->
+    </div>
+
+    <div class="instructions">
+      <strong>How does this work?</strong><br>
+      This page allows you to convert text into high-quality audio using OpenAI’s text-to-speech (TTS) technology. <br><br>
+      <strong>To use your own OpenAI API key:</strong>
+      <ol>
+        <li>Clone <a href="https://github.com/eteka/Voicebook" target="_blank">the Voicebook repository</a>.</li>
+        <li>Create a <code>.env</code> file with your API key: <code>OPENAI_API_KEY=sk-...</code></li>
+        <li>Run <code>python run.py</code>. For full features (caching, longer text, file uploads), use the main app.</li>
+      </ol>
+      This static demo does not send data to OpenAI. In the full app, your data is private and secure.<br><br>
+      <strong>Features:</strong> Clean text input, voice & quality selection, speed control, cost estimate – all matching the original app.
+    </div>
+
+    <div class="footer">
+      Voicebook &copy; 2025 | <a href="https://github.com/eteka/Voicebook" target="_blank" style="color:#95b">GitHub</a>
+    </div>
+  </div>
+
+  <script>
+    // Character costs (from README)
+    const COSTS = {
+      standard: 0.000015, // $15 per million chars
+      hd: 0.00003        // $30 per million chars
+    };
+    function estimateCost() {
+      const chars = document.getElementById('text').value.length;
+      let quality = document.getElementById('quality').value;
+      let perChar = COSTS[quality] || COSTS.standard;
+      let cost = chars * perChar;
+      document.getElementById('costEstimate').innerText =
+        `Estimated cost: $${cost.toFixed(4)}` + (chars > 0 ? ` (${chars.toLocaleString()} chars)` : '');
+    }
+    document.getElementById('text').addEventListener('input', estimateCost);
+    document.getElementById('quality').addEventListener('change', estimateCost);
+    
+    // DEMO: Not hooked to real API! Replace this logic in your app.
+    function convertTTS() {
+      const text = document.getElementById('text').value;
+      const voice = document.getElementById('voice').value;
+      const speed = document.getElementById('speed').value;
+      const quality = document.getElementById('quality').value;
+      if (!text.trim()) { alert('Please enter some text.'); return; }
+      
+      // In a real integration, you’d send to your server that calls OpenAI API, then show audio.
+      document.getElementById('output').innerHTML =
+        `<div class='audio-player'>
+           <b>Audio Preview:</b><br>
+           <i>(This is a demo. In the real app you would hear your result here!)</i><br>
+           <audio controls style='width:92%;margin-top:1em;' disabled>
+             <source src="#" type="audio/mpeg" />
+             Audio output would go here
+           </audio>
+           <div style="font-size:0.93em;color:#678;margin-top:0.8em">
+             Voice: <b>${voice}</b> | Quality: <b>${quality}</b> | Speed: <b>${speed}x</b>
+           </div>
+         </div>`;
+    }
+    estimateCost(); // Initial
+  </script>
+</body>
+</html>
