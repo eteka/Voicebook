@@ -73,6 +73,32 @@ python run.py
 
 The app will automatically open in your browser at `http://localhost:8501`
 
+## ☁️ Cloud Deployment
+
+**Important:** Voicebook is a Python/Streamlit application that requires a server. It **cannot run on GitHub Pages** (which only hosts static HTML files).
+
+### Deployment Options
+
+| Platform | Best For | Cost | Setup Time |
+|----------|----------|------|------------|
+| **Local** | Personal use | FREE | 5 minutes |
+| **Streamlit Cloud** | Easy sharing | FREE tier | 10 minutes |
+| **Railway/Render** | Custom hosting | ~$5/month | 15 minutes |
+
+**Recommended for personal use:** Run locally with `python run.py` (simple, free, private)
+
+**For cloud deployment:** See detailed instructions in [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### Quick Streamlit Cloud Deploy
+
+1. Push code to GitHub
+2. Sign up at https://streamlit.io/cloud
+3. Create new app → Select repository → Set main file: `src/ui/app.py`
+4. Add secret in dashboard: `OPENAI_API_KEY = your-key`
+5. Deploy!
+
+⚠️ **Warning:** Public deployments mean anyone can use YOUR API key. Set spending limits in OpenAI dashboard!
+
 ## 🔑 Getting an OpenAI API Key
 
 ### Step-by-Step Guide
