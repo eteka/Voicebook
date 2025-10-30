@@ -5,6 +5,7 @@
 
 # Cache and uploads
 cache/
+!src/cache/
 uploads/
 *.mp3
 *.wav
