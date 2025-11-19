@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  voicebook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voicebook-app
+    image: voicebook:latest
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CACHE_DIRECTORY=/app/cache
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    volumes:
+      # Mount cache directory for persistence
+      - ./cache:/app/cache:rw
+      # Mount .env file (optional, environment variables preferred)
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - voicebook-network
+    labels:
+      - "com.voicebook.description=Voicebook TTS application"
+      - "com.voicebook.version=1.0.0"
+
+  # ================================
+  # Future: PostgreSQL Database
+  # ================================
+  # Uncomment when Phase 7 (Database Integration) is implemented
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: voicebook-db
+  #   environment:
+  #     - POSTGRES_DB=voicebook
+  #     - POSTGRES_USER=voicebook
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U voicebook"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - voicebook-network
+
+  # ================================
+  # Future: Redis Cache
+  # ================================
+  # Uncomment for distributed caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: voicebook-redis
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis-data:/data
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - voicebook-network
+
+networks:
+  voicebook-network:
+    driver: bridge
+    name: voicebook-net
+
+# volumes:
+  # Uncomment when database is added
+  # postgres-data:
+  #   name: voicebook-postgres-data
+  # redis-data:
+  #   name: voicebook-redis-data

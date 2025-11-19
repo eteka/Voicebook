@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: voicebook
+  namespace: default
+  labels:
+    app: voicebook
+  annotations:
+    # For AWS IAM roles for service accounts (IRSA)
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/voicebook-role
+    # For GCP Workload Identity
+    # iam.gke.io/gcp-service-account: voicebook@PROJECT_ID.iam.gserviceaccount.com
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: voicebook-role
+  namespace: default
+  labels:
+    app: voicebook
+rules:
+  # Add permissions as needed
+  # Example: Read ConfigMaps
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  # Example: Read Secrets (if needed by the app)
+  # - apiGroups: [""]
+  #   resources: ["secrets"]
+  #   verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: voicebook-rolebinding
+  namespace: default
+  labels:
+    app: voicebook
+subjects:
+  - kind: ServiceAccount
+    name: voicebook
+    namespace: default
+roleRef:
+  kind: Role
+  name: voicebook-role
+  apiGroup: rbac.authorization.k8s.io

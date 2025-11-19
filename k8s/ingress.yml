@@ -1,0 +1,64 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: voicebook-ingress
+  namespace: default
+  labels:
+    app: voicebook
+  annotations:
+    # Common annotations for different ingress controllers
+
+    # Nginx Ingress Controller
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+
+    # Cert-manager for automatic TLS certificates
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+    # AWS ALB Ingress Controller
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+
+    # GCP GKE Ingress
+    # kubernetes.io/ingress.class: "gce"
+    # kubernetes.io/ingress.global-static-ip-name: "voicebook-ip"
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - voicebook.example.com
+    secretName: voicebook-tls-cert
+  rules:
+  - host: voicebook.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: voicebook
+            port:
+              number: 80
+
+---
+# Example: Certificate for cert-manager
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: voicebook-cert
+  namespace: default
+spec:
+  secretName: voicebook-tls-cert
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - voicebook.example.com
+  - www.voicebook.example.com

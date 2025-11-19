@@ -1,0 +1,79 @@
+version: '3.8'
+
+# Development Docker Compose Configuration
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  voicebook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_DEV_DEPS=true
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      # Mount cache with write permissions
+      - ./cache:/app/cache:rw
+    environment:
+      - PYTHONDONTWRITEBYTECODE=0  # Allow bytecode for faster reloads
+      - DEBUG=true
+    ports:
+      # Expose additional port for debugging
+      - "8501:8501"
+      - "5678:5678"  # Python debugger port
+    command: >
+      streamlit run src/ui/app.py
+      --server.port=8501
+      --server.address=0.0.0.0
+      --server.runOnSave=true
+      --server.headless=true
+      --browser.gatherUsageStats=false
+
+  # ================================
+  # Development Tools
+  # ================================
+
+  # Optional: Run tests in container
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voicebook-tests
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - ./htmlcov:/app/htmlcov:rw
+    environment:
+      - OPENAI_API_KEY=sk-test-mock-key
+    command: >
+      sh -c "pip install -r requirements-dev.txt &&
+             pytest tests/ --cov=src --cov-report=html --cov-report=term"
+    profiles:
+      - testing
+    networks:
+      - voicebook-network
+
+  # Optional: Code quality checker
+  linter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voicebook-linter
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+    command: >
+      sh -c "pip install -r requirements-dev.txt &&
+             black --check src/ tests/ &&
+             flake8 src/ tests/ &&
+             mypy src/"
+    profiles:
+      - quality
+    networks:
+      - voicebook-network
+
+networks:
+  voicebook-network:
+    driver: bridge

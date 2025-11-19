@@ -1,0 +1,233 @@
+name: Container Security
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - '.github/workflows/container-security.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'Dockerfile'
+      - 'requirements.txt'
+  schedule:
+    # Scan weekly on Sunday at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+jobs:
+  build-and-scan:
+    name: Build and Scan Container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        load: true
+        tags: voicebook:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    # ================================
+    # Trivy Container Scanning
+    # ================================
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: voicebook:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '0'  # Don't fail build, just report
+
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Trivy with table output
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: voicebook:${{ github.sha }}
+        format: 'table'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+
+    # ================================
+    # Grype Container Scanning
+    # ================================
+    - name: Run Grype vulnerability scanner
+      uses: anchore/scan-action@v3
+      id: grype
+      with:
+        image: voicebook:${{ github.sha }}
+        fail-build: false
+        severity-cutoff: high
+
+    - name: Upload Grype results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: ${{ steps.grype.outputs.sarif }}
+
+    # ================================
+    # Docker Scout (if using Docker Hub)
+    # ================================
+    - name: Docker Scout CVE scan
+      uses: docker/scout-action@v1
+      if: github.event_name != 'pull_request'
+      with:
+        command: cves
+        image: voicebook:${{ github.sha }}
+        only-severities: critical,high
+        exit-code: false
+
+    # ================================
+    # Hadolint - Dockerfile Linting
+    # ================================
+    - name: Lint Dockerfile with Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: Dockerfile
+        failure-threshold: warning
+        format: sarif
+        output-file: hadolint-results.sarif
+
+    - name: Upload Hadolint results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: hadolint-results.sarif
+
+    # ================================
+    # Container Structure Test
+    # ================================
+    - name: Run Container Structure Tests
+      run: |
+        # Install container-structure-test
+        curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+        chmod +x container-structure-test-linux-amd64
+        sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+
+        # Create test config if it doesn't exist
+        if [ ! -f container-structure-test.yaml ]; then
+          cat > container-structure-test.yaml <<EOF
+        schemaVersion: '2.0.0'
+        commandTests:
+          - name: "Python version"
+            command: "python"
+            args: ["--version"]
+            expectedOutput: ["Python 3.11.*"]
+        fileExistenceTests:
+          - name: "Application files"
+            path: "/app/src"
+            shouldExist: true
+          - name: "Requirements file"
+            path: "/app/requirements.txt"
+            shouldExist: true
+        metadataTest:
+          exposedPorts: ["8501"]
+          env:
+            - key: "PYTHONUNBUFFERED"
+              value: "1"
+        EOF
+        fi
+
+        # Run tests
+        container-structure-test test \
+          --image voicebook:${{ github.sha }} \
+          --config container-structure-test.yaml
+
+    # ================================
+    # Dockle - Container Image Linter
+    # ================================
+    - name: Run Dockle
+      uses: erzz/dockle-action@v1
+      with:
+        image: voicebook:${{ github.sha }}
+        exit-code: '0'
+        exit-level: WARN
+
+    # ================================
+    # Generate Security Report
+    # ================================
+    - name: Generate security summary
+      if: always()
+      run: |
+        echo "## Container Security Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Image Details" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image:** voicebook:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Scan Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Scan Tools Used" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Trivy (vulnerability scanner)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Grype (vulnerability scanner)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Hadolint (Dockerfile linter)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Dockle (container linter)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Container Structure Tests" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the Security tab for detailed SARIF reports." >> $GITHUB_STEP_SUMMARY
+
+  # ================================
+  # Image Size Analysis
+  # ================================
+  image-analysis:
+    name: Analyze Image Size
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        load: true
+        tags: voicebook:analysis
+
+    - name: Analyze image layers
+      run: |
+        echo "## Docker Image Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Get image size
+        IMAGE_SIZE=$(docker images voicebook:analysis --format "{{.Size}}")
+        echo "**Image Size:** $IMAGE_SIZE" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Show layer information
+        echo "### Image Layers" >> $GITHUB_STEP_SUMMARY
+        docker history voicebook:analysis --no-trunc >> $GITHUB_STEP_SUMMARY
+
+    - name: Run dive for layer analysis
+      run: |
+        # Install dive
+        wget https://github.com/wagoodman/dive/releases/download/v0.11.0/dive_0.11.0_linux_amd64.deb
+        sudo apt install ./dive_0.11.0_linux_amd64.deb
+
+        # Analyze image
+        CI=true dive voicebook:analysis --ci

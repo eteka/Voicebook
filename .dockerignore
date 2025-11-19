@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.hypothesis/
+
+# Documentation
+docs/_build/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.pre-commit-config.yaml
+
+# Development files
+requirements-dev.txt
+setup-dev.sh
+*.log
+
+# Cache and temporary files
+cache/
+*.tmp
+*.bak
+.cache/
+
+# Environment files (should be provided at runtime)
+.env
+.env.*
+!.env.example
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Samples (optional, include if needed for demos)
+# samples/
+
+# Other
+*.pdf
+*.docx
+*.txt
+!requirements.txt
+node_modules/
+npm-debug.log
