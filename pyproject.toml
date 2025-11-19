@@ -1,0 +1,265 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voicebook"
+version = "1.0.0"
+description = "AI-powered TTS audiobook generator with smart caching"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+keywords = ["tts", "audiobook", "openai", "text-to-speech", "ai"]
+authors = [
+    {name = "Voicebook Contributors"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    "streamlit>=1.28.0",
+    "openai>=1.3.0",
+    "python-dotenv>=1.0.0",
+    "PyPDF2>=3.0.0",
+    "pypdf>=3.17.0",
+    "python-docx>=1.0.0",
+    "python-magic>=0.4.27; sys_platform != 'win32'",
+    "python-magic-bin>=0.4.14; sys_platform == 'win32'",
+    "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.5.0",
+    # Code Quality
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "flake8>=7.0.0",
+    "pylint>=3.0.0",
+    "mypy>=1.8.0",
+    # Security
+    "bandit>=1.7.5",
+    "safety>=2.3.5",
+    # Type Stubs
+    "types-requests>=2.31.0",
+    # Coverage
+    "coverage[toml]>=7.4.0",
+    # Pre-commit
+    "pre-commit>=3.6.0",
+    # Code Analysis
+    "radon>=6.0.1",
+    "interrogate>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/eteka/Voicebook"
+Repository = "https://github.com/eteka/Voicebook"
+Documentation = "https://github.com/eteka/Voicebook/blob/main/README.md"
+"Bug Tracker" = "https://github.com/eteka/Voicebook/issues"
+
+[project.scripts]
+voicebook = "src.ui.app:main"
+
+# ================================
+# Black Configuration
+# ================================
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | cache
+)/
+'''
+
+# ================================
+# isort Configuration
+# ================================
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_gitignore = true
+skip = [".venv", "venv", "__pycache__", ".pytest_cache", "cache"]
+
+# ================================
+# mypy Configuration
+# ================================
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+no_strict_optional = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+check_untyped_defs = false
+
+# ================================
+# pytest Configuration
+# ================================
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "-l",
+    "-ra",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (slower, requires resources)",
+    "slow: Slow running tests",
+    "api: Tests that call external APIs (requires API key)",
+    "cache: Tests related to caching functionality",
+    "processors: Tests for document processors",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ================================
+# Coverage Configuration
+# ================================
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "*/venv/*",
+]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# ================================
+# Bandit Configuration
+# ================================
+[tool.bandit]
+exclude_dirs = [
+    "/tests",
+    "/.venv",
+    "/venv",
+    "/__pycache__",
+]
+skips = [
+    "B101",  # assert_used - we use asserts in tests
+]
+
+# ================================
+# Pylint Configuration
+# ================================
+[tool.pylint.main]
+max-line-length = 100
+disable = [
+    "C0111",  # missing-docstring
+    "C0103",  # invalid-name
+    "R0903",  # too-few-public-methods
+    "W0212",  # protected-access (for tests)
+]
+good-names = ["i", "j", "k", "ex", "f", "e", "db", "id"]
+ignore = ["tests", ".venv", "venv", "__pycache__"]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.design]
+max-args = 7
+max-attributes = 10
+max-locals = 20
+
+# ================================
+# Interrogate Configuration
+# ================================
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = true
+ignore-private = true
+ignore-property-decorators = true
+ignore-module = true
+ignore-nested-functions = true
+fail-under = 70
+exclude = ["tests", ".venv", "venv", "build", "dist"]
+verbose = 1
+quiet = false
+color = true
+
+# ================================
+# Radon Configuration
+# ================================
+[tool.radon]
+cc_min = "B"
+mi_min = "B"

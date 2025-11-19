@@ -1,5 +1,13 @@
 # 📖 Voicebook - Text-to-Speech Audiobook Generator
 
+[![CI - Tests & Coverage](https://github.com/eteka/Voicebook/actions/workflows/ci.yml/badge.svg)](https://github.com/eteka/Voicebook/actions/workflows/ci.yml)
+[![Code Quality](https://github.com/eteka/Voicebook/actions/workflows/code-quality.yml/badge.svg)](https://github.com/eteka/Voicebook/actions/workflows/code-quality.yml)
+[![Security Scanning](https://github.com/eteka/Voicebook/actions/workflows/security.yml/badge.svg)](https://github.com/eteka/Voicebook/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/eteka/Voicebook/branch/main/graph/badge.svg)](https://codecov.io/gh/eteka/Voicebook)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Transform your documents into high-quality audiobooks using OpenAI's Text-to-Speech API. Voicebook is designed for **cost-effective** conversion of official documents, reports, and articles into audio format for personal use.
 
 ## ✨ Features
