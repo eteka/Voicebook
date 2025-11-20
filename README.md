@@ -10,6 +10,22 @@
 
 Transform your documents into high-quality audiobooks using OpenAI's Text-to-Speech API. Voicebook is designed for **cost-effective** conversion of official documents, reports, and articles into audio format for personal use.
 
+## 🪶 Lightweight Setup Available!
+
+**New!** Running on a system with limited resources? No problem!
+
+Voicebook can run **natively with Python** (no Docker required) using only **~200-500 MB RAM**.
+
+| Setup Method | RAM Usage | Best For |
+|--------------|-----------|----------|
+| **Native Python** ⚡ | ~200-500 MB | Low-resource systems, development |
+| Docker | ~1-2 GB | Consistency, deployment |
+| Kubernetes | ~4-8 GB | Production, scaling |
+
+📖 **See [LIGHTWEIGHT_SETUP.md](LIGHTWEIGHT_SETUP.md)** for complete guide
+
+🚀 **Quick start:** `./test-local.sh` (automated setup without Docker)
+
 ## ✨ Features
 
 ### Phase 1 (Current Release)

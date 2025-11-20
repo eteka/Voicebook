@@ -31,6 +31,10 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+venv/
+env/
+ENV/
+.venv/
 
 # IDEs
 .vscode/
